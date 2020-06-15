@@ -1,6 +1,8 @@
 """CPU functionality."""
 
 import sys
+import glob
+import os
 
 
 class CPU:
@@ -16,8 +18,15 @@ class CPU:
         self.LDI = 0b10000010
         self.PRN = 0b01000111
 
-    def load(self):
+    def load(self, file):
         """Load a program into memory."""
+        try:
+            with open(file, 'r') as reader:
+                # read and print the entire file line by line
+                for line in reader:
+                    print(line)
+        except IOError:
+            print('Please specify a valid file name, thank you :)')
 
         address = 0
 
