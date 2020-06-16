@@ -20,31 +20,24 @@ class CPU:
 
     def load(self, file):
         """Load a program into memory."""
+
+        address = 0
+
         try:
             with open(file, 'r') as reader:
                 # read and print the entire file line by line
                 for line in reader:
-                    print(line)
+                    line_arr = line.split()
+                    # if a binary string, store in ram
+                    for word in line_arr:
+                        try:
+                            instruction = int(word, 2)
+                            self.ram[address] = instruction
+                            address += 1
+                        except ValueError:
+                            continue
         except IOError:
             print('Please specify a valid file name, thank you :)')
-
-        address = 0
-
-        # For now, we've just hardcoded a program:
-
-        program = [
-            # From print8.ls8
-            0b10000010,  # LDI R0,8
-            0b00000000,
-            0b00001000,
-            0b01000111,  # PRN R0
-            0b00000000,
-            0b00000001,  # HLT
-        ]
-
-        for instruction in program:
-            self.ram[address] = instruction
-            address += 1
 
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
