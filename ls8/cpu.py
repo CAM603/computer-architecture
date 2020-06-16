@@ -17,10 +17,10 @@ class CPU:
         self.HLT = 0b00000001
         self.LDI = 0b10000010
         self.PRN = 0b01000111
+        self.MUL = 0b10100010
 
     def load(self, file):
         """Load a program into memory."""
-
         address = 0
 
         try:
@@ -44,7 +44,9 @@ class CPU:
 
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
-        # elif op == "SUB": etc
+        elif op == "MUL":
+            self.reg[reg_a] *= self.reg[reg_b]
+            print(self.reg[reg_a])
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -85,6 +87,8 @@ class CPU:
             elif ir == self.PRN:  # print numeric value stored in the given register.
                 print(self.reg[operand_a])
                 self.pc += 2
+            elif ir == self.MUL:
+                return self.alu('MUL', operand_a, operand_b)
             else:
                 print(f'Unknown instruction {ir} at address {self.pc}')
                 sys.exit(1)
