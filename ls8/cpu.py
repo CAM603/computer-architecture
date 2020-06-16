@@ -15,27 +15,28 @@ class CPU:
         self.operand_a = 0
         self.operand_b = 0
 
-        self.branchtable = {}
-        self.branchtable[0b00000001] = self.hlt
-        self.branchtable[0b10000010] = self.ldi
-        self.branchtable[0b01000111] = self.prn
-        self.branchtable[0b10100010] = self.mul
+        self.branchtable = {
+            0b00000001: self.HLT,
+            0b10000010: self.LDI,
+            0b01000111: self.PRN,
+            0b10100010: self.MUL,
+        }
 
-    def hlt(self):
+    def HLT(self):
         self.running = False
         # print("HLT")
 
-    def ldi(self):
+    def LDI(self):
         self.reg[self.operand_a] = self.operand_b
         self.pc += 3
         # print("LDI")
 
-    def prn(self):
+    def PRN(self):
         print(self.reg[self.operand_a])
         self.pc += 2
         # print("PRN")
 
-    def mul(self):
+    def MUL(self):
         self.alu('MUL', self.operand_a, self.operand_b)
         self.pc += 3
         # print("MUL")
@@ -94,27 +95,14 @@ class CPU:
         """Run the CPU."""
         self.running = True
 
+        ir = self.ram[self.pc]
+
         while self.running:
             ir = self.ram[self.pc]  # Instruction Register
             self.operand_a = self.ram_read(self.pc + 1)
             self.operand_b = self.ram_read(self.pc + 2)
 
             self.branchtable[ir]()
-
-            # if ir == self.HLT:  # end the loop
-            #     running = False
-            # elif ir == self.LDI:  # sets a specified register to a specified value
-            #     self.branchtable[ir]()
-            #     self.reg[operand_a] = operand_b
-            #     self.pc += 3
-            # elif ir == self.PRN:  # print numeric value stored in the given register.
-            #     print(self.reg[operand_a])
-            #     self.pc += 2
-            # elif ir == self.MUL:
-            #     return self.alu('MUL', operand_a, operand_b)
-            # else:
-            #     print(f'Unknown instruction {ir} at address {self.pc}')
-            #     sys.exit(1)
 
     def ram_read(self, mar):
         # MAR: Memory Address Register contains the address that is being read or written to
