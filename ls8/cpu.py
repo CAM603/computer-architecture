@@ -11,6 +11,8 @@ class CPU:
         self.ram = [0] * 256  # 256 bytes of memory
         self.reg = [0] * 8  # 8 general purpose registers
         self.pc = 0  # program counter, index of the current instruction
+        # stack pointer points at the value at the top of the stack (most recently pushed), or at address F4 (244) if the stack is empty
+        self.sp = 244
         self.running = False
         self.operand_a = 0
         self.operand_b = 0
@@ -20,7 +22,29 @@ class CPU:
             0b10000010: self.LDI,
             0b01000111: self.PRN,
             0b10100010: self.MUL,
+            0b01000101: self.PUSH,
+            0b01000110: self.POP
         }
+
+    def test(self):
+        print(self.reg[7])
+
+    def POP(self):
+        val = self.ram[self.sp]
+
+        self.reg[self.operand_a] = val
+        self.sp += 1
+        self.pc += 2
+        # print("POP")
+
+    def PUSH(self):
+        # decrement sp
+        self.sp -= 1
+        # Push the value in the given register on the stack.
+        val = self.reg[self.operand_a]
+        self.ram[self.sp] = val
+        self.pc += 2
+        # print('PUSH')
 
     def HLT(self):
         self.running = False
