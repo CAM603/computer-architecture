@@ -1,8 +1,6 @@
 """CPU functionality."""
 
 import sys
-import glob
-import os
 
 
 class CPU:
@@ -13,11 +11,34 @@ class CPU:
         self.ram = [0] * 256  # 256 bytes of memory
         self.reg = [0] * 8  # 8 general purpose registers
         self.pc = 0  # program counter, index of the current instruction
-        # Instruction definitions
-        self.HLT = 0b00000001
-        self.LDI = 0b10000010
-        self.PRN = 0b01000111
-        self.MUL = 0b10100010
+        self.running = False
+        self.operand_a = 0
+        self.operand_b = 0
+
+        self.branchtable = {}
+        self.branchtable[0b00000001] = self.hlt
+        self.branchtable[0b10000010] = self.ldi
+        self.branchtable[0b01000111] = self.prn
+        self.branchtable[0b10100010] = self.mul
+
+    def hlt(self):
+        self.running = False
+        # print("HLT")
+
+    def ldi(self):
+        self.reg[self.operand_a] = self.operand_b
+        self.pc += 3
+        # print("LDI")
+
+    def prn(self):
+        print(self.reg[self.operand_a])
+        self.pc += 2
+        # print("PRN")
+
+    def mul(self):
+        self.alu('MUL', self.operand_a, self.operand_b)
+        self.pc += 3
+        # print("MUL")
 
     def load(self, file):
         """Load a program into memory."""
@@ -46,7 +67,6 @@ class CPU:
             self.reg[reg_a] += self.reg[reg_b]
         elif op == "MUL":
             self.reg[reg_a] *= self.reg[reg_b]
-            print(self.reg[reg_a])
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -72,26 +92,29 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
-        running = True
+        self.running = True
 
-        while running:
+        while self.running:
             ir = self.ram[self.pc]  # Instruction Register
-            operand_a = self.ram_read(self.pc + 1)
-            operand_b = self.ram_read(self.pc + 2)
+            self.operand_a = self.ram_read(self.pc + 1)
+            self.operand_b = self.ram_read(self.pc + 2)
 
-            if ir == self.HLT:  # end the loop
-                running = False
-            elif ir == self.LDI:  # sets a specified register to a specified value
-                self.reg[operand_a] = operand_b
-                self.pc += 3
-            elif ir == self.PRN:  # print numeric value stored in the given register.
-                print(self.reg[operand_a])
-                self.pc += 2
-            elif ir == self.MUL:
-                return self.alu('MUL', operand_a, operand_b)
-            else:
-                print(f'Unknown instruction {ir} at address {self.pc}')
-                sys.exit(1)
+            self.branchtable[ir]()
+
+            # if ir == self.HLT:  # end the loop
+            #     running = False
+            # elif ir == self.LDI:  # sets a specified register to a specified value
+            #     self.branchtable[ir]()
+            #     self.reg[operand_a] = operand_b
+            #     self.pc += 3
+            # elif ir == self.PRN:  # print numeric value stored in the given register.
+            #     print(self.reg[operand_a])
+            #     self.pc += 2
+            # elif ir == self.MUL:
+            #     return self.alu('MUL', operand_a, operand_b)
+            # else:
+            #     print(f'Unknown instruction {ir} at address {self.pc}')
+            #     sys.exit(1)
 
     def ram_read(self, mar):
         # MAR: Memory Address Register contains the address that is being read or written to
