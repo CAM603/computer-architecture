@@ -23,11 +23,33 @@ class CPU:
             0b01000111: self.PRN,
             0b10100010: self.MUL,
             0b01000101: self.PUSH,
-            0b01000110: self.POP
+            0b01000110: self.POP,
+            0b01010000: self.CALL,
+            0b00010001: self.RET,
+            0b10100000: self.ADD
         }
 
     def test(self):
         print(self.reg[7])
+
+    def ADD(self):
+        self.alu('ADD', self.operand_a, self.operand_b)
+        self.pc += 3
+
+    def RET(self):
+        # Pop the value from the top of the stack and store it in the PC
+        next_inst = self.ram[self.sp]
+        self.sp += 1
+        self.pc = next_inst
+
+    def CALL(self):
+        # Get address of the instruction directly after CALL
+        next_inst = self.pc + 2
+        # Push it on the stack
+        self.sp -= 1
+        self.ram[self.sp] = next_inst
+        # PC is set to the address stored in the given reg
+        self.pc = self.reg[self.operand_a]
 
     def POP(self):
         val = self.ram[self.sp]
