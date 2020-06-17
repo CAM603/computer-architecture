@@ -26,11 +26,21 @@ class CPU:
             0b01000110: self.POP,
             0b01010000: self.CALL,
             0b00010001: self.RET,
-            0b10100000: self.ADD
+            0b10100000: self.ADD,
+            0b10000100: self.ST
         }
 
     def test(self):
         print(self.reg[7])
+
+    def ST(self):
+        # Store value in registerB in the address stored in registerA.
+        # Value in registerB
+        val = self.reg[self.operand_b]
+        # Address stored in registerA
+        address = self.reg[self.operand_a]
+        # write to memory
+        self.ram[address] = val
 
     def ADD(self):
         self.alu('ADD', self.operand_a, self.operand_b)
