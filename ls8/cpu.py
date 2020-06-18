@@ -11,12 +11,13 @@ class CPU:
         self.ram = [0] * 256  # 256 bytes of memory
         self.reg = [0] * 8  # 8 general purpose registers
         self.pc = 0  # program counter, index of the current instruction
-        # stack pointer points at the value at the top of the stack (most recently pushed), or at address F4 (244) if the stack is empty
-        self.sp = 244
+        # stack pointer, index of the top of the stack (most recently pushed)
+        self.sp = self.reg[7]  # R7 is reserved as the stack pointer (SP)
+        self.reg[7] = 0xF4  # sp points to F4 if the stack is empty
         self.running = False
         self.operand_a = 0
         self.operand_b = 0
-
+        # dictionary of functions that you can index by opcode value
         self.branchtable = {
             0b00000001: self.HLT,
             0b10000010: self.LDI,
@@ -27,14 +28,20 @@ class CPU:
             0b01010000: self.CALL,
             0b00010001: self.RET,
             0b10100000: self.ADD,
-            0b10000100: self.ST
+            0b10000100: self.ST,
+            0b01010100: self.JMP
         }
 
     def test(self):
         print(self.reg[7])
 
-    def ST(self):
-        # Store value in registerB in the address stored in registerA.
+    def JMP(self):  # Jump to the address stored in the given register.
+        # Get address stored in the given register
+        address = self.reg[self.operand_a]
+        # Set PC to the address
+        self.pc = address
+
+    def ST(self):  # Store value in registerB in the address stored in registerA.
         # Value in registerB
         val = self.reg[self.operand_b]
         # Address stored in registerA
@@ -42,57 +49,60 @@ class CPU:
         # write to memory
         self.ram[address] = val
 
-    def ADD(self):
+    def ADD(self):  # Add two registers and store result in registerA.
         self.alu('ADD', self.operand_a, self.operand_b)
         self.pc += 3
 
-    def RET(self):
-        # Pop the value from the top of the stack and store it in the PC
+    def RET(self):  # Return from subroutine CALL
+        # Get value from the top of the stack
         next_inst = self.ram[self.sp]
         self.sp += 1
+        # store it in the PC
         self.pc = next_inst
 
-    def CALL(self):
+    def CALL(self):  # Calls a function at the address stored in the register
         # Get address of the instruction directly after CALL
         next_inst = self.pc + 2
-        # Push it on the stack
         self.sp -= 1
+        # Push it on the stack
         self.ram[self.sp] = next_inst
         # PC is set to the address stored in the given reg
         self.pc = self.reg[self.operand_a]
 
-    def POP(self):
+    def POP(self):  # Pop value at top of stack into given register.
+        # Get value from the address pointed to by SP
         val = self.ram[self.sp]
-
+        # Set value to the given register
         self.reg[self.operand_a] = val
         self.sp += 1
         self.pc += 2
         # print("POP")
 
-    def PUSH(self):
-        # decrement sp
+    def PUSH(self):  # Push the value in the given register on the stack.
+        # Decrement sp
         self.sp -= 1
-        # Push the value in the given register on the stack.
+        # Get the value in the given register
         val = self.reg[self.operand_a]
+        # Push the value on the stack.
         self.ram[self.sp] = val
         self.pc += 2
         # print('PUSH')
 
-    def HLT(self):
+    def HLT(self):  # Stop run loop
         self.running = False
         # print("HLT")
 
-    def LDI(self):
+    def LDI(self):  # Set the value of a register to an integer.
         self.reg[self.operand_a] = self.operand_b
         self.pc += 3
         # print("LDI")
 
-    def PRN(self):
+    def PRN(self):  # Print numeric value stored in the given register
         print(self.reg[self.operand_a])
         self.pc += 2
         # print("PRN")
 
-    def MUL(self):
+    def MUL(self):  # Multiply two registers and store result in registerA.
         self.alu('MUL', self.operand_a, self.operand_b)
         self.pc += 3
         # print("MUL")
@@ -106,8 +116,8 @@ class CPU:
                 # read and print the entire file line by line
                 for line in reader:
                     line_arr = line.split()
-                    # if a binary string, store in ram
                     for word in line_arr:
+                        # if a binary string, store in ram
                         try:
                             instruction = int(word, 2)
                             self.ram[address] = instruction
@@ -119,7 +129,6 @@ class CPU:
 
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
-
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
         elif op == "MUL":
@@ -151,10 +160,10 @@ class CPU:
         """Run the CPU."""
         self.running = True
 
-        ir = self.ram[self.pc]
-
         while self.running:
-            ir = self.ram[self.pc]  # Instruction Register
+            # Instruction Register contains a copy of the currently executing instruction
+            ir = self.ram[self.pc]
+            # Grab the next two bytes of data after the PC
             self.operand_a = self.ram_read(self.pc + 1)
             self.operand_b = self.ram_read(self.pc + 2)
 
