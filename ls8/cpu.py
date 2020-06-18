@@ -36,15 +36,33 @@ class CPU:
             0b01010100: self.JMP,
             0b10100111: self.CMP,
             0b01010110: self.JNE,
-            0b01010101: self.JEQ
+            0b01010101: self.JEQ,
+            0b10000011: self.LD,
+            0b01001000: self.PRA,
+            0b01100101: self.INC,
+            0b01100110: self.DEC,
         }
 
     def test(self):
         print(self.reg[7])
 
+    def DEC(self):  # This is an instruction handled by the ALU
+        self.alu('DEC', self.operand_a)
+        self.pc += 2
+
+    def INC(self):  # This is an instruction handled by the ALU
+        self.alu('INC', self.operand_a)
+        self.pc += 2
+
+    # Loads registerA with the value at the memory address stored in registerB.
+    def LD(self):
+        value = self.reg[self.operand_b]
+        self.reg[self.operand_a] = self.ram[value]
+        self.pc += 3
+
     def JEQ(self):  # If E flag is true, jump to address stored in given register
         # If E flag is true, 1
-        if self.e == 1:
+        if self.e:
             # get address stored in given register
             address = self.reg[self.operand_a]
             # Set PC to the address
@@ -54,7 +72,7 @@ class CPU:
 
     def JNE(self):  # If E flag is false, jump to address stored in given register
         # If E flag is false, 0
-        if self.e == 0:
+        if not self.e:
             # get address stored in given register
             address = self.reg[self.operand_a]
             # Set PC to the address
@@ -134,6 +152,11 @@ class CPU:
         self.pc += 2
         # print("PRN")
 
+    def PRA(self):  # Print alpha character value stored in the given register
+        value = self.reg[self.operand_a]
+        print(chr(value))
+        self.pc += 2
+
     def MUL(self):  # Multiply two registers and store result in registerA.
         self.alu('MUL', self.operand_a, self.operand_b)
         self.pc += 3
@@ -159,7 +182,7 @@ class CPU:
         except IOError:
             print('Please specify a valid file name, thank you :)')
 
-    def alu(self, op, reg_a, reg_b):
+    def alu(self, op, reg_a=None, reg_b=None):
         """ALU operations."""
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
@@ -182,6 +205,10 @@ class CPU:
             elif self.reg[reg_a] > self.reg[reg_b]:
                 # Set the Greater-than G flag to 1, otherwise set it to 0
                 self.g = 1
+        elif op == 'INC':  # Increment the value in the given register by 1
+            self.reg[reg_a] += 1
+        elif op == 'DEC':  # Decrement the value in the given register by 1
+            self.reg[reg_a] -= 1
         else:
             raise Exception("Unsupported ALU operation")
 
