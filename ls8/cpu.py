@@ -17,6 +17,10 @@ class CPU:
         self.running = False
         self.operand_a = 0
         self.operand_b = 0
+        # Flags
+        self.e = 0  # Equal flag
+        self.l = 0  # Less than flag
+        self.g = 0  # Greater than flag
         # dictionary of functions that you can index by opcode value
         self.branchtable = {
             0b00000001: self.HLT,
@@ -29,11 +33,39 @@ class CPU:
             0b00010001: self.RET,
             0b10100000: self.ADD,
             0b10000100: self.ST,
-            0b01010100: self.JMP
+            0b01010100: self.JMP,
+            0b10100111: self.CMP,
+            0b01010110: self.JNE,
+            0b01010101: self.JEQ
         }
 
     def test(self):
         print(self.reg[7])
+
+    def JEQ(self):  # If E flag is true, jump to address stored in given register
+        # If E flag is true, 1
+        if self.e == 1:
+            # get address stored in given register
+            address = self.reg[self.operand_a]
+            # Set PC to the address
+            self.pc = address
+        else:
+            self.pc += 2
+
+    def JNE(self):  # If E flag is false, jump to address stored in given register
+        # If E flag is false, 0
+        if self.e == 0:
+            # get address stored in given register
+            address = self.reg[self.operand_a]
+            # Set PC to the address
+            self.pc = address
+        else:
+            self.pc += 2
+
+    def CMP(self):  # Compare the values in two registers
+        # This is an instruction handled by the ALU
+        self.alu('CMP', self.operand_a, self.operand_b)
+        self.pc += 3
 
     def JMP(self):  # Jump to the address stored in the given register.
         # Get address stored in the given register
@@ -133,6 +165,23 @@ class CPU:
             self.reg[reg_a] += self.reg[reg_b]
         elif op == "MUL":
             self.reg[reg_a] *= self.reg[reg_b]
+        elif op == 'CMP':
+            # If they are equal
+            self.e = 0
+            self.l = 0
+            self.g = 0
+
+            if self.reg[reg_a] == self.reg[reg_b]:
+                # Set the Equal E flag to 1, otherwise set it to 0
+                self.e = 1
+            # If registerA is less than registerB
+            elif self.reg[reg_a] < self.reg[reg_b]:
+                # Set Less-than L flag to 1, otherwise set it to 0
+                self.l = 1
+            # If registerA is greater than registerB
+            elif self.reg[reg_a] > self.reg[reg_b]:
+                # Set the Greater-than G flag to 1, otherwise set it to 0
+                self.g = 1
         else:
             raise Exception("Unsupported ALU operation")
 
