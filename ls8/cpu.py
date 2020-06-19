@@ -43,17 +43,6 @@ class CPU:
             0b01100110: self.DEC,
         }
 
-    def test(self):
-        print(self.reg[7])
-
-    def DEC(self):  # This is an instruction handled by the ALU
-        self.alu('DEC', self.operand_a)
-        self.pc += 2
-
-    def INC(self):  # This is an instruction handled by the ALU
-        self.alu('INC', self.operand_a)
-        self.pc += 2
-
     # Loads registerA with the value at the memory address stored in registerB.
     def LD(self):
         value = self.reg[self.operand_b]
@@ -80,11 +69,6 @@ class CPU:
         else:
             self.pc += 2
 
-    def CMP(self):  # Compare the values in two registers
-        # This is an instruction handled by the ALU
-        self.alu('CMP', self.operand_a, self.operand_b)
-        self.pc += 3
-
     def JMP(self):  # Jump to the address stored in the given register.
         # Get address stored in the given register
         address = self.reg[self.operand_a]
@@ -98,10 +82,6 @@ class CPU:
         address = self.reg[self.operand_a]
         # write to memory
         self.ram[address] = val
-
-    def ADD(self):  # Add two registers and store result in registerA.
-        self.alu('ADD', self.operand_a, self.operand_b)
-        self.pc += 3
 
     def RET(self):  # Return from subroutine CALL
         # Get value from the top of the stack
@@ -156,6 +136,25 @@ class CPU:
         value = self.reg[self.operand_a]
         print(chr(value))
         self.pc += 2
+
+    ##### Instructions handled by the ALU #####
+
+    def DEC(self):  # This is an instruction handled by the ALU
+        self.alu('DEC', self.operand_a)
+        self.pc += 2
+
+    def INC(self):  # This is an instruction handled by the ALU
+        self.alu('INC', self.operand_a)
+        self.pc += 2
+
+    def CMP(self):  # Compare the values in two registers
+        # This is an instruction handled by the ALU
+        self.alu('CMP', self.operand_a, self.operand_b)
+        self.pc += 3
+
+    def ADD(self):  # Add two registers and store result in registerA.
+        self.alu('ADD', self.operand_a, self.operand_b)
+        self.pc += 3
 
     def MUL(self):  # Multiply two registers and store result in registerA.
         self.alu('MUL', self.operand_a, self.operand_b)
